@@ -1,7 +1,7 @@
 import { UploadApiErrorResponse, UploadApiResponse } from "cloudinary";
 import cloudinary from "../config/cloudinary";
 
-//------Generic for file upload
+//------Generic for file upload file could be image or video--------
 const uploadFileToCloudiary = async (
   file: any,             
   folder: string,
