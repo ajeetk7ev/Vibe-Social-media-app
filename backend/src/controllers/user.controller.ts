@@ -3,6 +3,7 @@ import { User } from "../models/User";
 import bcrypt from 'bcrypt';
 import uploadFileToCloudiary from "../utils/fileUploadToCloudinary";
 import mongoose from "mongoose";
+import { Notification } from "../models/Notification";
 
 
 
@@ -133,6 +134,17 @@ export const followUser = async (req: Request, res: Response) => {
 
     await me.save();
     await targetUser.save();
+
+    // create follow notification
+    try {
+      if (myId.toString() !== targetUserId.toString()) {
+        await Notification.create({
+          user: targetUser._id,
+          fromUser: me._id,
+          type: "follow",
+        });
+      }
+    } catch (_) {}
 
     return res.status(200).json({
       success: true,

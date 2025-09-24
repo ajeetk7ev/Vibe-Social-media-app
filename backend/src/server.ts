@@ -6,6 +6,8 @@ import authRoutes from './routes/auth.route';
 import userRoutes from './routes/user.route';
 import fileUpload from 'express-fileupload';
 import postRoutes from './routes/post.route';
+import storyRoutes from './routes/story.route';
+import notificationRoutes from './routes/notification.route';
 const app = express();
 
 const PORT = process.env.PORT || 5000;
@@ -23,6 +25,8 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/post", postRoutes);
+app.use("/api/story", storyRoutes);
+app.use("/api/notification", notificationRoutes);
 
 app.listen(PORT, async () => {
     await dbConnect();

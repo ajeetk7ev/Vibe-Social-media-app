@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import { Post } from "../models/Post";
 import { Comment } from "../models/Comment";
 import uploadFileToCloudiary from "../utils/fileUploadToCloudinary";
+import { Notification } from "../models/Notification";
 
 // Create a new post with optional media (images/videos)
 export const createPost = async (req: Request, res: Response) => {
@@ -107,6 +108,12 @@ export const likePost = async (req: Request, res: Response) => {
 
     post.likes.push(userId);
     await post.save();
+    // notify post author
+    try {
+      if (post.author.toString() !== userId.toString()) {
+        await Notification.create({ user: post.author, fromUser: userId, type: "like", post: post._id });
+      }
+    } catch (_) {}
     return res.status(200).json({ success: true, likes: post.likes.length });
   } catch (error) {
     console.error("Error in likePost:", error);
@@ -151,6 +158,12 @@ export const addComment = async (req: Request, res: Response) => {
     if (!post) return res.status(404).json({ success: false, message: "Post not found" });
 
     const comment = await Comment.create({ post: post._id, user: userId, text });
+    // notify post author
+    try {
+      if (post.author.toString() !== userId.toString()) {
+        await Notification.create({ user: post.author, fromUser: userId, type: "comment", post: post._id });
+      }
+    } catch (_) {}
     return res.status(201).json({ success: true, comment });
   } catch (error) {
     console.error("Error in addComment:", error);
