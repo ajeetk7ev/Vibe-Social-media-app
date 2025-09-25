@@ -5,6 +5,8 @@ node_modules
 # Build / Dist
 backend/dist
 
+mobile/.expo
+
 # Env files
 *.env
 *.env.local
