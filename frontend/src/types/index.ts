@@ -1,0 +1,52 @@
+export interface User {
+  _id: string;
+  username: string;
+  email: string;
+  name?: string;
+  bio?: string;
+  avatar?: string;
+  followers?: string[];
+  following?: string[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Post {
+  _id: string;
+  author: string;
+  caption?: string;
+  media: { url: string; mimeType: string }[];
+  likes: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Story {
+  _id: string;
+  user: string;
+  mediaUrl: string;
+  mediaType: "image" | "video";
+  viewers: string[];
+  createdAt: string;
+  expiresAt: string;
+}
+
+export interface Comment {
+  _id: string;
+  post: string;
+  user: string;
+  text: string;
+  createdAt: string;
+}
+
+export interface Notification {
+  _id: string;
+  user: string;
+  fromUser: string;
+  type: "like" | "comment" | "follow";
+  post?: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export * from './auth';
