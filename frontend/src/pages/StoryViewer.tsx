@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { X } from "lucide-react";
-import { mockStories } from "@/mocks/sotries";
+import { useStoryStore } from "@/stores/storyStore";
 import StoryProgress from "@/components/stories/StoryProgress";
 import StoryActions from "@/components/stories/StoryActions";
 
@@ -10,12 +10,13 @@ const STORY_DURATION = 5000;
 const StoryViewer: React.FC = () => {
   const { storyId } = useParams();
   const navigate = useNavigate();
+  const { stories, viewStory } = useStoryStore();
 
-  const startIndex = mockStories.findIndex((s) => s._id === storyId);
+  const startIndex = stories.findIndex((s) => s._id === storyId);
   const [index, setIndex] = useState(startIndex);
   const [progress, setProgress] = useState(0);
 
-  const story = mockStories[index];
+  const story = stories[index];
 
   // AUTO PLAY
   useEffect(() => {
@@ -34,7 +35,7 @@ const StoryViewer: React.FC = () => {
   }, [index]);
 
   const next = () => {
-    if (index < mockStories.length - 1) {
+    if (index < stories.length - 1) {
       setIndex(index + 1);
     } else {
       navigate(-1);
@@ -45,7 +46,13 @@ const StoryViewer: React.FC = () => {
     if (index > 0) setIndex(index - 1);
   };
 
-  if (!story) return null;
+  useEffect(() => {
+    if (story) {
+      viewStory(story._id);
+    }
+  }, [story, viewStory]);
+
+  if (!story) return <div>Loading...</div>;
 
   return (
     <div

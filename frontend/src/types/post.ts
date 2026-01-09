@@ -1,3 +1,5 @@
+import {type Comment } from "./comment";
+
 export interface Post {
   _id: string;
   author: {
@@ -10,5 +12,6 @@ export interface Post {
     mimeType: string;
   }[];
   likes: string[];
+  comments?: Comment[];
   createdAt: string;
 }

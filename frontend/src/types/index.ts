@@ -13,7 +13,10 @@ export interface User {
 
 export interface Post {
   _id: string;
-  author: string;
+  author: {
+    username: string;
+    avatar?: string;
+  };
   caption?: string;
   media: { url: string; mimeType: string }[];
   likes: string[];
@@ -23,18 +26,23 @@ export interface Post {
 
 export interface Story {
   _id: string;
-  user: string;
+  user: {
+    username: string;
+    avatar?: string;
+  };
   mediaUrl: string;
   mediaType: "image" | "video";
-  viewers: string[];
+  viewers?: string[];
   createdAt: string;
   expiresAt: string;
 }
 
 export interface Comment {
   _id: string;
-  post: string;
-  user: string;
+  user: {
+    username: string;
+    avatar?: string;
+  };
   text: string;
   createdAt: string;
 }

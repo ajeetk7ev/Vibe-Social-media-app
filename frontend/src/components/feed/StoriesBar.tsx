@@ -1,14 +1,20 @@
-import { mockStories } from "@/mocks/sotries";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Avatar from "../common/Avatar";
+import { useStoryStore } from "@/stores/storyStore";
 
 const StoriesBar: React.FC = () => {
   const navigate = useNavigate();
+  const { stories, fetchStories } = useStoryStore();
+
+  useEffect(() => {
+    fetchStories();
+  }, [fetchStories]);
 
   return (
     <div className="w-full overflow-x-auto scrollbar-hide mb-6">
       <div className="flex gap-5 px-1">
-        {mockStories.map((story) => (
+        {stories.map((story) => (
           <button
             key={story._id}
             onClick={() =>

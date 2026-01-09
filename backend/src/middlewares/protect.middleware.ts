@@ -25,6 +25,8 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
       });
     }
 
+    
+
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as DecodedToken;
 
