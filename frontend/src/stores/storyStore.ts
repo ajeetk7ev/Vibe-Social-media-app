@@ -14,6 +14,8 @@ interface StoryState {
   createStory: (media: File) => Promise<boolean>;
   viewStory: (storyId: string) => Promise<void>;
   deleteStory: (storyId: string) => Promise<boolean>;
+  likeStory: (storyId: string) => Promise<void>;
+  unlikeStory: (storyId: string) => Promise<void>;
 }
 
 export const useStoryStore = create<StoryState>((set) => ({
@@ -42,7 +44,7 @@ export const useStoryStore = create<StoryState>((set) => ({
       formData.append("media", media);
 
       const res = await axios.post(`${API_URL}/story`, formData, {
-        headers: { 
+        headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${token}`,
         },
@@ -63,7 +65,6 @@ export const useStoryStore = create<StoryState>((set) => ({
       await axios.post(`${API_URL}/story/${storyId}/view`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      // Optionally update viewers count locally
     } catch (error: any) {
       set({ error: error.response?.data?.message || "Failed to view story" });
     }
@@ -82,6 +83,38 @@ export const useStoryStore = create<StoryState>((set) => ({
     } catch (error: any) {
       set({ error: error.response?.data?.message || "Failed to delete story" });
       return false;
+    }
+  },
+
+  likeStory: async (storyId) => {
+    try {
+      const token = getFromLocalStorage("token");
+      const res = await axios.post(`${API_URL}/story/${storyId}/like`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      set((state) => ({
+        stories: state.stories.map((s) =>
+          s._id === storyId ? { ...s, likes: Array(res.data.likes).fill("id") } : s
+        ),
+      }));
+    } catch (error: any) {
+      console.error(error);
+    }
+  },
+
+  unlikeStory: async (storyId) => {
+    try {
+      const token = getFromLocalStorage("token");
+      const res = await axios.post(`${API_URL}/story/${storyId}/unlike`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      set((state) => ({
+        stories: state.stories.map((s) =>
+          s._id === storyId ? { ...s, likes: Array(res.data.likes).fill("id") } : s
+        ),
+      }));
+    } catch (error: any) {
+      console.error(error);
     }
   },
 }));

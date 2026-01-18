@@ -3,6 +3,7 @@ import { protect } from "../middlewares/protect.middleware";
 import {
   updateProfile,
   getProfileDetails,
+  getProfileByUsername,
   followUser,
   unfollowUser,
 } from "../controllers/user.controller";
@@ -21,7 +22,10 @@ router.post("/follow/:id", protect, followUser);
 // Unfollow a user
 router.post("/unfollow/:id", protect, unfollowUser);
 
+// Get a user's profile by username
+router.get("/username/:username", protect, getProfileByUsername);
+
 // Get a user's profile by id
-router.get("/:id", protect, getProfileDetails);
+router.get("/profile/:id", protect, getProfileDetails);
 
 export default router;

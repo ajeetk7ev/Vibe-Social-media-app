@@ -4,72 +4,91 @@ import { Settings } from "lucide-react";
 
 interface Props {
   profile: any;
+  onFollowersClick?: () => void;
+  onFollowingClick?: () => void;
+  onEditClick?: () => void;
 }
 
-const MyProfileHeader: React.FC<Props> = ({ profile }) => {
+const MyProfileHeader: React.FC<Props> = ({
+  profile,
+  onFollowersClick,
+  onFollowingClick,
+  onEditClick
+}) => {
   return (
-    <div >
-      <div className="flex flex-col md:flex-row gap-8 md:gap-14">
+    <div className="border-b border-slate-900 pb-10">
+      <div className="flex flex-col md:flex-row gap-8 md:gap-20 items-center md:items-start text-center md:text-left">
         {/* Avatar */}
-        <div className="relative">
-          <Avatar
-            src={profile.avatar}
-            name={profile.username}
-            size={120}
-          />
-          <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-xs bg-slate-800 text-white px-2 py-1 rounded-full">
-            Note...
-          </span>
+        <div className="relative group">
+          <div className="p-1 rounded-full bg-gradient-to-tr from-slate-800 to-slate-700">
+            <Avatar
+              src={profile.avatar}
+              name={profile.username}
+              size={150}
+              className="border-4 border-black"
+            />
+          </div>
+          {/* Active status indicator */}
+          <div className="absolute bottom-4 right-4 w-6 h-6 bg-green-500 border-4 border-black rounded-full shadow-lg"></div>
         </div>
 
         {/* Info */}
-        <div className="flex-1 space-y-4">
+        <div className="flex-1 space-y-6 pt-4 w-full">
           {/* Username & actions */}
-          <div className="flex flex-wrap items-center gap-3">
-            <h2 className="text-xl font-semibold text-white">
+          <div className="flex flex-col md:flex-row items-center gap-6">
+            <h2 className="text-2xl font-bold text-white flex items-center gap-2">
               {profile.username}
             </h2>
 
-            <Button
-              variant="secondary"
-              className="bg-slate-800 text-white hover:bg-slate-700"
-            >
-              Edit profile
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={onEditClick}
+                variant="secondary"
+                className="bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl px-6 h-9 transition-all active:scale-95"
+              >
+                Edit Profile
+              </Button>
 
-            <Button
-              variant="secondary"
-              className="bg-slate-800 text-white hover:bg-slate-700"
-            >
-              View archive
-            </Button>
-
-            <button className="p-2 rounded-full hover:bg-slate-800 text-white">
-              <Settings size={18} />
-            </button>
+              <button className="p-2 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white transition-all bg-slate-900/50 active:scale-90">
+                <Settings size={18} />
+              </button>
+            </div>
           </div>
 
           {/* Stats */}
-          <div className="flex gap-6 text-sm text-white">
-            <span>
-              <b>{profile.postsCount}</b>{" "}
-              <span className="text-slate-400">posts</span>
-            </span>
-            <span>
-              <b>{profile.followers.length}</b>{" "}
-              <span className="text-slate-400">followers</span>
-            </span>
-            <span>
-              <b>{profile.following.length}</b>{" "}
-              <span className="text-slate-400">following</span>
-            </span>
+          <div className="flex justify-center md:justify-start gap-10 md:gap-14 py-2">
+            <div className="flex flex-col md:flex-row items-center gap-1">
+              <span className="text-lg font-bold text-white">{profile.postsCount}</span>
+              <span className="text-sm text-slate-500 font-medium">posts</span>
+            </div>
+
+            <button
+              onClick={onFollowersClick}
+              className="group flex flex-col md:flex-row items-center gap-1 transition-all"
+            >
+              <span className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">
+                {profile.followers?.length || 0}
+              </span>
+              <span className="text-sm text-slate-500 group-hover:text-slate-400 font-medium">followers</span>
+            </button>
+
+            <button
+              onClick={onFollowingClick}
+              className="group flex flex-col md:flex-row items-center gap-1 transition-all"
+            >
+              <span className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">
+                {profile.following?.length || 0}
+              </span>
+              <span className="text-sm text-slate-500 group-hover:text-slate-400 font-medium">following</span>
+            </button>
           </div>
 
           {/* Bio */}
-          <div className="text-sm text-slate-200 whitespace-pre-line leading-relaxed">
-            <b className="text-white">{profile.name}</b>
-            {"\n"}
-            {profile.bio}
+          <div className="space-y-1">
+            <p className="text-base font-bold text-white">{profile.name}</p>
+            <p className="text-sm text-slate-300 whitespace-pre-line leading-relaxed max-w-md mx-auto md:mx-0">
+              {profile.bio || "No bio yet."}
+            </p>
           </div>
         </div>
       </div>

@@ -9,6 +9,7 @@ import {
   unlikePost,
   addComment,
   getComments,
+  getUserPosts,
 } from "../controllers/post.controller";
 
 const router = Router();
@@ -20,6 +21,9 @@ router.post("/", protect, createPost);
 // Single post
 router.get("/:id", protect, getPostById);
 router.delete("/:id", protect, deletePost);
+
+// User posts
+router.get("/user/:userId", protect, getUserPosts);
 
 // Likes
 router.post("/:id/like", protect, likePost);

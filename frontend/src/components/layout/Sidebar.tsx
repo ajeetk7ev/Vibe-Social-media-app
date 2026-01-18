@@ -11,6 +11,8 @@ import {
   Settings,
   LogOut,
 } from "lucide-react";
+import { useAuthStore } from "@/stores/authStore";
+import { useNavigate } from "react-router-dom";
 
 const navItems = [
   { label: "Home", icon: Home, path: "/" },
@@ -19,74 +21,85 @@ const navItems = [
   { label: "Search", icon: Search, path: "/search" },
   { label: "Explore", icon: Compass, path: "/explore" },
   { label: "Notifications", icon: Heart, path: "/notifications" },
-  { label: "Create", icon: PlusSquare, path: "/create" },
-  { label: "Profile", icon: User, path: "/profile/username_data" },
+  { label: "Create", icon: PlusSquare, path: "/create/post" },
+  { label: "Profile", icon: User, path: "/profile" },
 ];
 
 const Sidebar: React.FC = () => {
+  const { logout } = useAuthStore();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+
+  }
   return (
     <aside
       className="
+        hidden
+        md:flex
         fixed
         top-0
         left-0
         bottom-0
         group/sidebar
         h-screen
-        w-20 hover:w-64
-        bg-slate-950
-        border-r border-slate-800
+        w-20 hover:w-64 xl:w-64
+        bg-black/95
+        backdrop-blur-xl
+        border-r border-slate-900
         px-3 py-6
         flex flex-col
-        transition-all duration-300
-        overflow-hidden
+        transition-all duration-300 ease-in-out
+        z-50
       "
     >
       {/* Logo */}
-      <div className="mb-8 flex items-center gap-4 px-2">
-        <div className="w-8 h-8 rounded bg-white text-black flex items-center justify-center font-bold shrink-0">
-          S
+      <div className="mb-10 flex items-center gap-4 px-3">
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 text-white flex items-center justify-center font-black shrink-0 shadow-lg shadow-blue-500/20">
+          V
         </div>
 
         <h1
           className="
-            text-xl font-bold text-white tracking-wide
-            opacity-0 group-hover/sidebar:opacity-100
-            transition-opacity duration-200
+            text-2xl font-black text-white tracking-tighter
+            opacity-0 group-hover/sidebar:opacity-100 xl:opacity-100
+            transition-all duration-300
             whitespace-nowrap
+            bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400
           "
         >
-          SocialApp
+          Vibe
         </h1>
       </div>
 
       {/* Navigation */}
-      <nav className="space-y-1">
+      <nav className="space-y-2">
         {navItems.map(({ label, icon: Icon, path }) => (
           <NavLink
             key={label}
             to={path}
             className={({ isActive }) =>
               `
-              flex items-center gap-4 px-3 py-3 rounded-lg
-              transition-colors
-              ${
-                isActive
-                  ? "bg-slate-800 text-white"
-                  : "text-slate-300 hover:bg-slate-900 hover:text-white"
+              flex items-center gap-4 px-3 py-3.5 rounded-xl
+              transition-all duration-200
+              ${isActive
+                ? "bg-slate-900 text-blue-400 shadow-inner"
+                : "text-slate-400 hover:bg-slate-900 hover:text-white"
               }
             `
             }
           >
             {/* ICON — always visible */}
-            <Icon size={22} className="shrink-0" />
+            <Icon size={24} className="shrink-0" />
 
-            {/* LABEL — hover only */}
+            {/* LABEL — hover only on smaller screens, always on XL */}
             <span
               className="
-                text-sm font-medium
-                opacity-0 group-hover/sidebar:opacity-100
-                transition-opacity duration-200
+                text-sm font-bold tracking-tight
+                opacity-0 group-hover/sidebar:opacity-100 xl:opacity-100
+                transition-all duration-300
                 whitespace-nowrap
               "
             >
@@ -97,21 +110,21 @@ const Sidebar: React.FC = () => {
       </nav>
 
       {/* Bottom Actions (Pinned) */}
-      <div className="mt-auto pt-4 border-t border-slate-800 space-y-1">
+      <div className="mt-auto pt-6 border-t border-slate-900 space-y-2">
         {/* Settings */}
         <button
           className="
-            flex items-center gap-4 px-3 py-3 rounded-lg
-            text-slate-300 hover:bg-slate-900 hover:text-white
-            transition-colors w-full
+            flex items-center gap-4 px-3 py-3 rounded-xl
+            text-slate-400 hover:bg-slate-900 hover:text-white
+            transition-all duration-200 w-full
           "
         >
-          <Settings size={22} className="shrink-0" />
+          <Settings size={24} className="shrink-0" />
           <span
             className="
-              text-sm font-medium
-              opacity-0 group-hover/sidebar:opacity-100
-              transition-opacity duration-200
+              text-sm font-bold tracking-tight
+              opacity-0 group-hover/sidebar:opacity-100 xl:opacity-100
+              transition-all duration-300
               whitespace-nowrap
             "
           >
@@ -122,17 +135,18 @@ const Sidebar: React.FC = () => {
         {/* Logout */}
         <button
           className="
-            flex items-center gap-4 px-3 py-3 rounded-lg
-            text-red-400 hover:bg-red-500/10 hover:text-red-500
-            transition-colors w-full
+            flex items-center gap-4 px-3 py-3 rounded-xl
+            text-red-400/80 hover:bg-red-500/10 hover:text-red-500
+            transition-all duration-200 w-full
           "
+          onClick={handleLogout}
         >
-          <LogOut size={22} className="shrink-0" />
+          <LogOut size={24} className="shrink-0" />
           <span
             className="
-              text-sm font-medium
-              opacity-0 group-hover/sidebar:opacity-100
-              transition-opacity duration-200
+              text-sm font-bold tracking-tight
+              opacity-0 group-hover/sidebar:opacity-100 xl:opacity-100
+              transition-all duration-300
               whitespace-nowrap
             "
           >

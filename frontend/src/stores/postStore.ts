@@ -9,31 +9,60 @@ interface PostState {
   loading: boolean;
   error: string | null;
 
+  // Pagination
+  page: number;
+  hasMore: boolean;
+  isFetchingMore: boolean;
+
   // Actions
-  fetchFeed: () => Promise<void>;
+  fetchFeed: (page?: number) => Promise<void>;
   createPost: (caption: string, media: File[]) => Promise<boolean>;
   likePost: (postId: string) => Promise<void>;
   unlikePost: (postId: string) => Promise<void>;
   addComment: (postId: string, text: string) => Promise<void>;
   getComments: (postId: string) => Promise<Comment[]>;
   deletePost: (postId: string) => Promise<boolean>;
+  fetchUserPosts: (userId: string) => Promise<void>;
 }
 
-export const usePostStore = create<PostState>((set) => ({
+export const usePostStore = create<PostState>((set, get) => ({
   posts: [],
   loading: false,
   error: null,
+  page: 1,
+  hasMore: true,
+  isFetchingMore: false,
 
-  fetchFeed: async () => {
-    set({ loading: true, error: null });
+  fetchFeed: async (page = 1) => {
+    // If it's page 1, set main loading. If > 1, set isFetchingMore
+    if (page === 1) {
+      set({ loading: true, error: null, posts: [], page: 1, hasMore: true });
+    } else {
+      set({ isFetchingMore: true, error: null });
+    }
+
     try {
       const token = getFromLocalStorage("token");
-      const res = await axios.get(`${API_URL}/post`, {
+      const res = await axios.get(`${API_URL}/post?page=${page}&limit=5`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      set({ posts: res.data.posts, loading: false });
+
+      const newPosts = res.data.posts;
+      const { hasMore } = res.data.pagination;
+
+      set((state) => ({
+        posts: page === 1 ? newPosts : [...state.posts, ...newPosts],
+        loading: false,
+        isFetchingMore: false,
+        page: page,
+        hasMore: hasMore,
+      }));
     } catch (error: any) {
-      set({ error: error.response?.data?.message || "Failed to fetch feed", loading: false });
+      set({
+        error: error.response?.data?.message || "Failed to fetch feed",
+        loading: false,
+        isFetchingMore: false,
+      });
     }
   },
 
@@ -46,7 +75,7 @@ export const usePostStore = create<PostState>((set) => ({
       media.forEach((file) => formData.append("media", file));
 
       const res = await axios.post(`${API_URL}/post`, formData, {
-        headers: { 
+        headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${token}`,
         },
@@ -64,38 +93,52 @@ export const usePostStore = create<PostState>((set) => ({
   likePost: async (postId) => {
     try {
       const token = getFromLocalStorage("token");
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      const user = getFromLocalStorage("user");
+      const userId = user?._id || user?.id;
+      if (!userId) return;
+
       await axios.post(`${API_URL}/post/${postId}/like`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       set((state) => ({
-        posts: state.posts.map((post) =>
-          post._id === postId
-            ? { ...post, likes: [...post.likes, user._id] }
-            : post
-        ),
+        posts: state.posts.map((post) => {
+          if (post._id !== postId) return post;
+          const currentLikes = post.likes || [];
+          // Prevent duplicate likes in local state
+          const alreadyLiked = currentLikes.some(id => String(id) === String(userId));
+          if (alreadyLiked) return post;
+          return { ...post, likes: [...currentLikes, userId] };
+        }),
       }));
     } catch (error: any) {
-      set({ error: error.response?.data?.message || "Failed to like post" });
+      console.error("Like error:", error);
     }
   },
 
   unlikePost: async (postId) => {
     try {
       const token = getFromLocalStorage("token");
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      const user = getFromLocalStorage("user");
+      const userId = user?._id || user?.id;
+      if (!userId) return;
+
       await axios.post(`${API_URL}/post/${postId}/unlike`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       set((state) => ({
-        posts: state.posts.map((post) =>
-          post._id === postId
-            ? { ...post, likes: post.likes.filter(id => id !== user._id) }
-            : post
-        ),
+        posts: state.posts.map((post) => {
+          if (post._id !== postId) return post;
+          const currentLikes = post.likes || [];
+          return {
+            ...post,
+            likes: currentLikes.filter(id => String(id) !== String(userId))
+          };
+        }),
       }));
     } catch (error: any) {
-      set({ error: error.response?.data?.message || "Failed to unlike post" });
+      console.error("Unlike error:", error);
     }
   },
 
@@ -137,6 +180,19 @@ export const usePostStore = create<PostState>((set) => ({
     } catch (error: any) {
       set({ error: error.response?.data?.message || "Failed to delete post" });
       return false;
+    }
+  },
+
+  fetchUserPosts: async (userId: string) => {
+    set({ loading: true, error: null });
+    try {
+      const token = getFromLocalStorage("token");
+      const res = await axios.get(`${API_URL}/post/user/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      set({ posts: res.data.posts, loading: false });
+    } catch (error: any) {
+      set({ error: error.response?.data?.message || "Failed to fetch user posts", loading: false });
     }
   },
 }));

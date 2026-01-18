@@ -4,99 +4,100 @@ import bcrypt from 'bcrypt';
 import uploadFileToCloudiary from "../utils/fileUploadToCloudinary";
 import mongoose from "mongoose";
 import { Notification } from "../models/Notification";
+import { getReceiverSocketId, io } from "../socket";
 
 
 
 export const updateProfile = async (req: Request, res: Response) => {
-    try {
-        const userId = (req as any).user._id;
-        const { name, bio, password } = req.body;
+  try {
+    const userId = (req as any).user._id;
+    const { name, bio, password } = req.body;
 
-        if (!password) {
-            return res.status(400).json({
-                success: false,
-                message: "Password is requried"
-            })
-        }
-
-
-        const user = await User.findById(userId);
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: "User not found",
-            });
-        }
-
-        // Match password
-        const isPasswordMatch = await bcrypt.compare(password, user.password);
-        if (!isPasswordMatch) {
-            return res.status(400).json({
-                success: false,
-                message: "Password is incorrect",
-            });
-        }
-
-
-
-        // Handle image upload if provided
-        let avatar = "";
-        if (req.files && (req.files as any).avatar) {
-            const file = (req.files as any).avatar as any;
-            const uploadResponse = await uploadFileToCloudiary(file, "user_images", 800);
-            avatar = uploadResponse.secure_url;
-        }
-
-        if (name) user.name = name;
-        if (bio) user.bio = bio;
-        if (avatar) user.avatar = avatar;
-
-        await user.save();
-
-        const { password: _, ...updatedUser } = user.toObject();
-        return res.status(200).json({
-            success: true,
-            message: "Profile updated successfully",
-            user: updatedUser
-        });
-
-    } catch (error) {
-        console.log("Error in updateProfile", error);
-        return res.status(500).json({
-            success: false,
-            message: "Server error"
-        })
+    if (!password) {
+      return res.status(400).json({
+        success: false,
+        message: "Password is requried"
+      })
     }
+
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Match password
+    const isPasswordMatch = await bcrypt.compare(password, user.password);
+    if (!isPasswordMatch) {
+      return res.status(400).json({
+        success: false,
+        message: "Password is incorrect",
+      });
+    }
+
+
+
+    // Handle image upload if provided
+    let avatar = "";
+    if (req.files && (req.files as any).avatar) {
+      const file = (req.files as any).avatar as any;
+      const uploadResponse = await uploadFileToCloudiary(file, "user_images", 800);
+      avatar = uploadResponse.secure_url;
+    }
+
+    if (name) user.name = name;
+    if (bio) user.bio = bio;
+    if (avatar) user.avatar = avatar;
+
+    await user.save();
+
+    const { password: _, ...updatedUser } = user.toObject();
+    return res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      user: updatedUser
+    });
+
+  } catch (error) {
+    console.log("Error in updateProfile", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error"
+    })
+  }
 }
 
 export const getProfileDetails = async (req: Request, res: Response) => {
-    try {
-        const userId = req.params.id || (req as any).user._id; 
+  try {
+    const userId = req.params.id || (req as any).user._id;
 
-        const user = await User.findById(userId)
-            .select("-password") // exclude password
-            .populate("followers", "username avatar") // optional
-            .populate("following", "username avatar");
+    const user = await User.findById(userId)
+      .select("-password") // exclude password
+      .populate("followers", "username avatar") // optional
+      .populate("following", "username avatar");
 
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: "User not found",
-            });
-        }
-
-        return res.status(200).json({
-            success: true,
-            user,
-        });
-
-    } catch (error) {
-        console.error("Error in getProfileDetails:", (error as Error).message);
-        return res.status(500).json({
-            success: false,
-            message: "Server error",
-        });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
     }
+
+    return res.status(200).json({
+      success: true,
+      user,
+    });
+
+  } catch (error) {
+    console.error("Error in getProfileDetails:", (error as Error).message);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
 };
 
 export const followUser = async (req: Request, res: Response) => {
@@ -138,13 +139,18 @@ export const followUser = async (req: Request, res: Response) => {
     // create follow notification
     try {
       if (myId.toString() !== targetUserId.toString()) {
-        await Notification.create({
+        const newNotification = await Notification.create({
           user: targetUser._id,
           fromUser: me._id,
           type: "follow",
         });
+
+        const receiverSocketId = getReceiverSocketId(targetUserId);
+        if (receiverSocketId) {
+          io.to(receiverSocketId).emit("newNotification", newNotification);
+        }
       }
-    } catch (_) {}
+    } catch (_) { }
 
     return res.status(200).json({
       success: true,
@@ -152,6 +158,41 @@ export const followUser = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Error in followUser:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
+export const getProfileByUsername = async (req: Request, res: Response) => {
+  try {
+    const { username } = req.params;
+    const currentUserId = (req as any).user?._id;
+
+    const user = await User.findOne({ username })
+      .select("-password")
+      .populate("followers", "username avatar")
+      .populate("following", "username avatar");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const isFollowing = currentUserId
+      ? user.followers.some(f => f._id.toString() === currentUserId.toString())
+      : false;
+
+    return res.status(200).json({
+      success: true,
+      user,
+      isFollowing,
+    });
+  } catch (error) {
+    console.error("Error in getProfileByUsername:", error);
     return res.status(500).json({
       success: false,
       message: "Server error",

@@ -20,11 +20,15 @@ const CreatePostModal: React.FC<CreatePostModalProps> = ({
   const [files, setFiles] = useState<File[]>([]);
   const { createPost, loading } = usePostStore();
 
-  const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) return;
-    setFiles((prev) => [...prev, ...Array.from(e.target.files)]);
-  };
+ const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const selectedFiles = e.target.files;
+  if (!selectedFiles) return;
 
+  setFiles((prev) => [
+    ...prev,
+    ...Array.from(selectedFiles),
+  ]);
+};
   const removeFile = (index: number) => {
     setFiles(files.filter((_, i) => i !== index));
   };

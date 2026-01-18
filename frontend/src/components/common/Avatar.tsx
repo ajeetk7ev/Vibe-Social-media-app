@@ -2,16 +2,18 @@ interface AvatarProps {
   name: string;
   src?: string;
   size?: number;
+  className?: string;
 }
 
 const Avatar: React.FC<AvatarProps> = ({
   name,
   src,
   size = 56,
+  className = "",
 }) => {
   return (
     <div
-      className="rounded-full bg-slate-700 flex items-center justify-center text-white font-semibold overflow-hidden"
+      className={`rounded-full bg-slate-700 flex items-center justify-center text-white font-semibold overflow-hidden ${className}`}
       style={{ width: size, height: size }}
     >
       {src ? (

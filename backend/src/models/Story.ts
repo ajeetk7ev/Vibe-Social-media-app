@@ -2,11 +2,12 @@ import mongoose, { Schema, Document } from "mongoose";
 
 export interface IStory extends Document {
   user: mongoose.Types.ObjectId;
-  mediaUrl: string;        
+  mediaUrl: string;
   mediaType: "image" | "video";
   viewers: mongoose.Types.ObjectId[]; // users who viewed
+  likes: mongoose.Types.ObjectId[];   // users who liked
   createdAt: Date;
-  expiresAt: Date;         // auto-delete logic handled in app
+  expiresAt: Date;
 }
 
 const StorySchema = new Schema<IStory>(
@@ -15,6 +16,7 @@ const StorySchema = new Schema<IStory>(
     mediaUrl: { type: String, required: true },
     mediaType: { type: String, enum: ["image", "video"], required: true },
     viewers: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    likes: [{ type: Schema.Types.ObjectId, ref: "User" }],
     expiresAt: { type: Date, required: true }, // set when creating
   },
   { timestamps: true }

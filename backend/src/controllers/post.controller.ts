@@ -4,6 +4,7 @@ import { Post } from "../models/Post";
 import { Comment } from "../models/Comment";
 import uploadFileToCloudiary from "../utils/fileUploadToCloudinary";
 import { Notification } from "../models/Notification";
+import { getReceiverSocketId, io } from "../socket";
 
 // Create a new post with optional media (images/videos)
 export const createPost = async (req: Request, res: Response) => {
@@ -17,8 +18,8 @@ export const createPost = async (req: Request, res: Response) => {
       const files = Array.isArray((req as any).files.media)
         ? ((req as any).files.media as any[])
         : (req as any).files.media
-        ? [((req as any).files.media as any)]
-        : [];
+          ? [((req as any).files.media as any)]
+          : [];
 
       for (const file of files) {
         const uploaded = (await uploadFileToCloudiary(
@@ -43,13 +44,33 @@ export const createPost = async (req: Request, res: Response) => {
 };
 
 // Get feed: latest posts (optionally could be following only later)
-export const getFeed = async (_req: Request, res: Response) => {
+// Get feed: latest posts with pagination
+export const getFeed = async (req: Request, res: Response) => {
   try {
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+
     const posts = await Post.find()
       .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
       .populate("author", "username avatar")
       .lean();
-    return res.status(200).json({ success: true, posts });
+
+    const totalPosts = await Post.countDocuments();
+    const totalPages = Math.ceil(totalPosts / limit);
+
+    return res.status(200).json({
+      success: true,
+      posts,
+      pagination: {
+        totalPosts,
+        totalPages,
+        currentPage: page,
+        hasMore: page < totalPages
+      }
+    });
   } catch (error) {
     console.error("Error in getFeed:", error);
     return res.status(500).json({ success: false, message: "Server error" });
@@ -111,9 +132,13 @@ export const likePost = async (req: Request, res: Response) => {
     // notify post author
     try {
       if (post.author.toString() !== userId.toString()) {
-        await Notification.create({ user: post.author, fromUser: userId, type: "like", post: post._id });
+        const newNotification = await Notification.create({ user: post.author, fromUser: userId, type: "like", post: post._id });
+        const receiverSocketId = getReceiverSocketId(post.author.toString());
+        if (receiverSocketId) {
+          io.to(receiverSocketId).emit("newNotification", newNotification);
+        }
       }
-    } catch (_) {}
+    } catch (_) { }
     return res.status(200).json({ success: true, likes: post.likes.length });
   } catch (error) {
     console.error("Error in likePost:", error);
@@ -161,9 +186,13 @@ export const addComment = async (req: Request, res: Response) => {
     // notify post author
     try {
       if (post.author.toString() !== userId.toString()) {
-        await Notification.create({ user: post.author, fromUser: userId, type: "comment", post: post._id });
+        const newNotification = await Notification.create({ user: post.author, fromUser: userId, type: "comment", post: post._id });
+        const receiverSocketId = getReceiverSocketId(post.author.toString());
+        if (receiverSocketId) {
+          io.to(receiverSocketId).emit("newNotification", newNotification);
+        }
       }
-    } catch (_) {}
+    } catch (_) { }
     return res.status(201).json({ success: true, comment });
   } catch (error) {
     console.error("Error in addComment:", error);
@@ -182,6 +211,20 @@ export const getComments = async (req: Request, res: Response) => {
     return res.status(200).json({ success: true, comments });
   } catch (error) {
     console.error("Error in getComments:", error);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+export const getUserPosts = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const posts = await Post.find({ author: userId })
+      .sort({ createdAt: -1 })
+      .populate("author", "username avatar")
+      .lean();
+    return res.status(200).json({ success: true, posts });
+  } catch (error) {
+    console.error("Error in getUserPosts:", error);
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };

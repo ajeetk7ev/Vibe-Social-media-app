@@ -1,5 +1,6 @@
 export interface User {
   _id: string;
+  id?: string;
   username: string;
   email: string;
   name?: string;
@@ -27,12 +28,14 @@ export interface Post {
 export interface Story {
   _id: string;
   user: {
+    _id: string;
     username: string;
     avatar?: string;
   };
   mediaUrl: string;
   mediaType: "image" | "video";
   viewers?: string[];
+  likes?: string[];
   createdAt: string;
   expiresAt: string;
 }
