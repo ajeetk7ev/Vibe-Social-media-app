@@ -8,6 +8,7 @@ import Profile from "@/pages/Profile";
 import MyProfile from "@/components/profile/MyProfile";
 import Messages from "@/pages/Messages";
 import Notifications from "@/pages/Notifications";
+import Discover from "@/pages/Discover";
 import PrivateRoute from "@/components/core/auth/PrivateRoute";
 import OpenRoute from "@/components/core/auth/OpenRoute";
 
@@ -24,6 +25,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/profile" element={<PrivateRoute><MyProfile /></PrivateRoute>} />
       <Route path="/messages" element={<PrivateRoute><Messages /></PrivateRoute>} />
       <Route path="/notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
+      <Route path="/discover" element={<PrivateRoute><Discover /></PrivateRoute>} />
     </Routes>
   );
 };

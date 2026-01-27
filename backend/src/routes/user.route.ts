@@ -6,12 +6,16 @@ import {
   getProfileByUsername,
   followUser,
   unfollowUser,
+  getAllUsers,
 } from "../controllers/user.controller";
 
 const router = Router();
 
 // Get current user's profile
 router.get("/profile", protect, getProfileDetails);
+
+// Get all users
+router.get("/all", protect, getAllUsers);
 
 // Update current user's profile
 router.put("/profile", protect, updateProfile);

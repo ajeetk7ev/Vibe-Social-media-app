@@ -51,13 +51,8 @@ export const useAuthStore = create<AuthState>((set) => ({
         password,
       });
 
-      const { user, token, message } = res.data;
+      const {  message } = res.data;
 
-      setToLocalStorage("user", user);
-      setToLocalStorage("token", token);
-      set({ user, token });
-      // Set axios default headers
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
       return { success: true, message };
     } catch (error: any) {

@@ -4,9 +4,9 @@ import { Home, Search, PlusSquare, Heart, User } from "lucide-react";
 const BottomNav: React.FC = () => {
     const navItems = [
         { icon: Home, path: "/", label: "Home" },
-        { icon: Search, path: "/search", label: "Search" },
+        { icon: Search, path: "/discover", label: "Discover" },
         { icon: PlusSquare, path: "/create/post", label: "Create" },
-        { icon: Heart, path: "/notifications", label: "Explore" }, // Using heart for notifications or explore? sidebar has both.
+        { icon: Heart, path: "/notifications", label: "Notifications" },
         { icon: User, path: "/profile", label: "Profile" },
     ];
 

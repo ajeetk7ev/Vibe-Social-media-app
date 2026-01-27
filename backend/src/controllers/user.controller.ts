@@ -1,12 +1,10 @@
 import { Request, Response } from "express";
 import { User } from "../models/User";
-import bcrypt from 'bcrypt';
+import bcrypt from "bcrypt";
 import uploadFileToCloudiary from "../utils/fileUploadToCloudinary";
 import mongoose from "mongoose";
 import { Notification } from "../models/Notification";
 import { getReceiverSocketId, io } from "../socket";
-
-
 
 export const updateProfile = async (req: Request, res: Response) => {
   try {
@@ -16,10 +14,9 @@ export const updateProfile = async (req: Request, res: Response) => {
     if (!password) {
       return res.status(400).json({
         success: false,
-        message: "Password is requried"
-      })
+        message: "Password is requried",
+      });
     }
-
 
     const user = await User.findById(userId);
     if (!user) {
@@ -38,13 +35,15 @@ export const updateProfile = async (req: Request, res: Response) => {
       });
     }
 
-
-
     // Handle image upload if provided
     let avatar = "";
     if (req.files && (req.files as any).avatar) {
       const file = (req.files as any).avatar as any;
-      const uploadResponse = await uploadFileToCloudiary(file, "user_images", 800);
+      const uploadResponse = await uploadFileToCloudiary(
+        file,
+        "user_images",
+        800,
+      );
       avatar = uploadResponse.secure_url;
     }
 
@@ -58,17 +57,16 @@ export const updateProfile = async (req: Request, res: Response) => {
     return res.status(200).json({
       success: true,
       message: "Profile updated successfully",
-      user: updatedUser
+      user: updatedUser,
     });
-
   } catch (error) {
     console.log("Error in updateProfile", error);
     return res.status(500).json({
       success: false,
-      message: "Server error"
-    })
+      message: "Server error",
+    });
   }
-}
+};
 
 export const getProfileDetails = async (req: Request, res: Response) => {
   try {
@@ -90,7 +88,6 @@ export const getProfileDetails = async (req: Request, res: Response) => {
       success: true,
       user,
     });
-
   } catch (error) {
     console.error("Error in getProfileDetails:", (error as Error).message);
     return res.status(500).json({
@@ -150,7 +147,7 @@ export const followUser = async (req: Request, res: Response) => {
           io.to(receiverSocketId).emit("newNotification", newNotification);
         }
       }
-    } catch (_) { }
+    } catch (_) {}
 
     return res.status(200).json({
       success: true,
@@ -183,7 +180,9 @@ export const getProfileByUsername = async (req: Request, res: Response) => {
     }
 
     const isFollowing = currentUserId
-      ? user.followers.some(f => f._id.toString() === currentUserId.toString())
+      ? user.followers.some(
+          (f) => f._id.toString() === currentUserId.toString(),
+        )
       : false;
 
     return res.status(200).json({
@@ -232,10 +231,10 @@ export const unfollowUser = async (req: Request, res: Response) => {
 
     // remove from arrays
     me.following = me.following.filter(
-      (userId: any) => userId.toString() !== targetUserId
+      (userId: any) => userId.toString() !== targetUserId,
     );
     targetUser.followers = targetUser.followers.filter(
-      (userId: any) => userId.toString() !== myId
+      (userId: any) => userId.toString() !== myId,
     );
 
     await me.save();
@@ -254,3 +253,35 @@ export const unfollowUser = async (req: Request, res: Response) => {
   }
 };
 
+export const getAllUsers = async (req: Request, res: Response) => {
+  try {
+    const myId = (req as any).user._id;
+
+    // Fetch all users except the current user
+    const users = await User.find({ _id: { $ne: myId } })
+      .select("-password")
+      .sort({ createdAt: -1 });
+
+    // Format users to include whether current user is following them
+    const formattedUsers = users.map((user) => {
+      const userObj = user.toObject();
+      return {
+        ...userObj,
+        isFollowing: user.followers.some(
+          (f) => f.toString() === myId.toString(),
+        ),
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      users: formattedUsers,
+    });
+  } catch (error) {
+    console.error("Error in getAllUsers:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};

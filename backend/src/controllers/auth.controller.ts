@@ -48,22 +48,11 @@ export const signup = async (req: Request, res: Response) => {
         const user = new User({ username, email, password: hashedPassword });
         await user.save();
 
-        // Generate JWT token
-        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET!, { expiresIn: "3d" });
 
         // Send response
         return res.status(201).json({
             success: true,
             message: "User created successfully",
-            user: {
-                _id: user._id,
-                username: user.username,
-                email: user.email,
-                name: user.name,
-                bio: user.bio,
-                avatar: user.avatar,
-            },
-            token,
         });
     } catch (error) {
         console.error("Error in signup", error);
