@@ -1,4 +1,4 @@
-// Set item in localStorage (handles objects)
+// Set item in localStorage 
 export function setToLocalStorage(key: string, value: any): void {
   try {
     const stringValue = JSON.stringify(value);
